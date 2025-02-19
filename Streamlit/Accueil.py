@@ -1,14 +1,18 @@
 import streamlit as st
 
-# Configuration de la page
 st.set_page_config(
     page_title="Analyse et Prédiction de la catégorie du Vin 🍷",
     page_icon="🍷",
     layout="wide"
 )
 
-# Titre principal
+
 st.title("🍷 Analyse et Prédiction du Vin")
+
+
+st.image("wine.jpg")
+
+
 
 st.markdown(
     """

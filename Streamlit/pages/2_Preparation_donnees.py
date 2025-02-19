@@ -46,8 +46,8 @@ st.dataframe(df_modified[["target_text", "target_num"]].sample(10), use_containe
 
 st.markdown(
     """
-            #### Division du jeu de données
-            """
+        #### Division du jeu de données
+    """
 )
 # target=["target_text", "target_num"]
 target = ["target"]

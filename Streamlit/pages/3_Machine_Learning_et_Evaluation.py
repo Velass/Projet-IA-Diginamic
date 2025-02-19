@@ -149,8 +149,6 @@ if sous_page == "Réseau de Neurones":
     """
     )
 
-    st.markdown("### Visualisation Réseau de Neurones")
-
     st.markdown("### Nombre de Neurones")
 # Vérifier si le modèle contient un réseau de neurones
     if "neural_network" in pipe.named_steps:
@@ -158,7 +156,7 @@ if sous_page == "Réseau de Neurones":
 
         # Affichage du nombre de neurones par couche
         st.write("### 🧠 Nombre de neurones par couche du Réseau de Neurones :")
-        st.write(f"📌 Couches cachées : {hidden_layers}")
+        st.write(f"📌Nombre de neuronne dans la couche cachée : {hidden_layers}")
         st.write(
             f"📌 Nombre total de couches (y compris entrée et sortie) : {len(hidden_layers) + 2}"
         )

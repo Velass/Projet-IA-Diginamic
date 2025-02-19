@@ -43,7 +43,6 @@ st.write("nous pouvons donc voir que les données sont prêtes pour le machine l
 st.write(y_train["target"].value_counts(normalize=True))
 
 st.markdown("## Entraînement d'un arbre de décision")
-st.write("Nous allons maintenant entraîner un arbre de décision sur nos données.")
 pipe = pipeline.Pipeline([
     # ("feature_selection", feature_selection),
     # ('std_scaler', preprocessing.StandardScaler()),
@@ -53,16 +52,37 @@ pipe.fit(X_train, y_train)
 st.write("Nous allons maintenant entraîner un arbre de décision sur nos données.\n"
          "Nous avons créé et entraîné un pipeline qui contient un arbre de décision.\n"
          "Nous pouvons maintenant l'évaluer.")
-st.write("Accuracy on train set =", pipe.score(X_train,y_train), "Accuracy on test set =", pipe.score(X_test,y_test))
+train_acc = pipe.score(X_train, y_train)
+test_acc = pipe.score(X_test, y_test)
 
-fig = plt.figure(figsize=(30,20))
+st.markdown(f"""
+**📊 Accuracy sur le train set :** `{train_acc:.4f}`  
+**📊 Accuracy sur le test set :** `{test_acc:.4f}`
+""")
+
+st.markdown("### 🌳 Visualisation de l'Arbre de Décision")
+
+fig, ax = plt.subplots(figsize=(12, 6))
 tree.plot_tree(
-    pipe[-1],
+    pipe.named_steps["decision_tree"],  # Utilisation du bon index dans le pipeline
     feature_names=X_train.columns,
     filled=True,
     rounded=True,
-    class_names=["Vin sucré","Vin éuilibré", "Vin amer"],
-    fontsize=9
+    class_names=["Vin sucré", "Vin équilibré", "Vin amer"],
+    fontsize=8,
+    ax=ax
 )
-plt.savefig("tree_raw.png",bbox_inches="tight")
+
 st.pyplot(fig)
+
+st.markdown("### 📊 Matrice de Confusion")
+cm_display = metrics.ConfusionMatrixDisplay.from_predictions(
+    y_test, pipe.predict(X_test)
+)
+fig, ax = plt.subplots(figsize=(6, 4))
+cm_display.plot(ax=ax, cmap="Blues", colorbar=True)
+st.pyplot(fig)
+
+st.markdown("### 📄 Rapport de Classification")
+report = metrics.classification_report(y_test, pipe.predict(X_test))
+st.text(report)

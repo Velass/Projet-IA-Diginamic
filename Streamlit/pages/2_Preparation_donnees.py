@@ -124,7 +124,6 @@ tree.plot_tree(
     class_names=["Vin sucré", "Vin éuilibré", "Vin amer"],
     fontsize=9,
 )
-plt.savefig("tree_raw.png", bbox_inches="tight")
 st.pyplot(fig)
 
 st.markdown(

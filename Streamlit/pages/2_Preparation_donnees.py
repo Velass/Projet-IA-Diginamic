@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-from sklearn import linear_model, metrics, model_selection, pipeline, tree
+from sklearn import model_selection
+from src.dataframe import df_cleaned, df_raw_initial
 
 st.set_page_config(
     page_title="Préparation data",
@@ -14,42 +15,100 @@ st.set_page_config(
 
 pd.set_option("display.max_colwidth", None)
 
-# Lecture du CSV et transformation en DataFrame
-df_raw = pd.read_csv("./data/vin.csv", sep=",").iloc[:, 1:]
-
-
 st.title("🔧 Préparation des données")
 st.sidebar.header("Préparation des données")
+
+# Récapitulatif
+st.markdown(
+    """
+        #### Aperçu du jeu de données
+    """
+)
+st.markdown(
+    f"Le jeu de données comporte **{df_raw_initial.shape[0]}** lignes et **{df_raw_initial.shape[1]}** colonnes."
+)
 
 # Préparation de la target
 st.markdown(
     """
         #### Préparation de la target
-        - Correction du mot `éuilibré` -> `équilibré`
         - Renommage de la colonne `target` en `target_text`
         - Mappage de la colonne `target_text` en valeurs numériques dans une nouvelle colonne `target_number`
             - Vin sucré -> 0
             - Vin équilibré -> 1
             - Vin amer -> 2
-        - Affichage partiel d'un sample aléatoire de 5 valeurs
+        - Affichage du dataframe
     """
 )
-df_raw.replace(to_replace="Vin éuilibré", value="Vin équilibré", inplace=True)
-df_modified=df_raw.rename(columns={"target": "target_text"})
+df_raw = df_raw_initial.replace(
+    to_replace="Vin éuilibré", value="Vin équilibré")
+df_modified = df_cleaned
 df_modified["target_num"] = df_modified["target_text"].map(
     {"Vin sucré": 0, "Vin équilibré": 1, "Vin amer": 2}
 )
 df_raw["target"] = df_raw["target"].map(
     {"Vin sucré": 0, "Vin équilibré": 1, "Vin amer": 2}
 )
-st.dataframe(df_modified[["target_text", "target_num"]].sample(10), use_container_width=False)
 
+def affichage_sample(number):
+    st.markdown(f"##### Affichage partiel d'un sample aléatoire de {number} valeurs")
+    df_sample = df_modified.sample(number)
+    st.dataframe(df_sample, use_container_width=False)
+    st.markdown("##### Extrait des 2 dernières colonnes")
+    st.dataframe(
+        df_sample[["target_text", "target_num"]],
+        use_container_width=False,
+    )
+
+st.markdown("#### Affichage d'un extrait des données")
+cleaned_columns = df_raw.columns
+# columns = []
+nb_cols=len(cleaned_columns)
+# # st.write(f"nb cols: {nb_cols}")
+
+# TODO: à compléter: sélection des colonnes
+# nb_rows = nb_cols//2 if nb_cols%2==0 else (nb_cols+1)//2
+# st.write(f"nb rows: {nb_rows}")
+# checkboxes=[]
+# for i in range(0, nb_rows):
+#     cols = st.columns(2)
+#     for j in range(0, 2):
+#         col_index = i*2+j
+#         col_name = cleaned_columns[col_index]
+#         cols[j].checkbox(col_name, value=True, key=col_name, on_change=None)
+#         checkboxes.append(cols[j])
+
+max_val = min(df_raw_initial.shape[0], 200)
+with st.form("num_sample_form"):
+    col1, col2 = st.columns([1, 1], vertical_alignment="bottom")
+
+    with col1:
+        num_sample = st.number_input(
+            "Combien de lignes souhaitez-vous afficher (1 à 200)?",
+            min_value=1,
+            max_value=max_val,
+            step=1,
+            value=10,
+            placeholder="Entrez un nombre",
+            key="num_sample",
+        )
+        num_sample = int(num_sample)
+
+    with col2:
+        button_num_sample = st.form_submit_button("Valider", type="primary")
+
+    if button_num_sample:
+        affichage_sample(num_sample)
+
+
+##############################
+# DIVISION DU JEU DE DONNÉES #
+##############################
 st.markdown(
     """
         #### Division du jeu de données
     """
 )
-# target=["target_text", "target_num"]
 target = ["target"]
 features = [col for col in df_raw.columns if col not in target]
 
@@ -57,29 +116,31 @@ X_train, X_test, y_train, y_test = model_selection.train_test_split(
     df_raw[features], df_raw[target], test_size=0.2, random_state=13
 )
 
-# df_proportions = pd.DataFrame(y_train[target].value_counts(normalize=True),columns=["target_text", "target_num", "proportion"])
-# df_proportions["proportion"].apply(lambda x: f"{round(x*100,2)} %")
+df_y_train = pd.DataFrame(y_train)
+df_y_test = pd.DataFrame(y_test)
 
-# print((y_train[target].value_counts(normalize=True)))
+st.markdown("""
+            Le jeu d'entraînement contient 80% des données.
+            Le jeu de test contient 20% des données.
+            """)
 
-st.write(y_train[target].value_counts(normalize=True))
+divisions = st.columns(2)
+md_text_0 = f"###### Données d'entraînement (80%, soit {df_y_train.shape[0]} lignes)"
+divisions[0].markdown(md_text_0)
+divisions[0].write(y_train[target].value_counts(normalize=True))
 
-# st.write(df_proportions)
-# st.write(proportions)
-
-
-st.markdown(
-    """
-        #### Feature Engineering
-    """
-)
+md_text_1 = f"###### Données de test (80%, soit {df_y_test.shape[0]} lignes)"
+divisions[1].markdown(md_text_1)
+divisions[1].write(y_test[target].value_counts(normalize=True))
 
 
-
+# TODO: A continuer s'il y a des outliers et
+# TODO: si on souhaite effectuer une sélection de features
 has_outliers = False
 if has_outliers:
     st.markdown(
         """
+        #### Feature Engineering
         ##### Outliers
         """
     )
@@ -97,48 +158,3 @@ if has_features_selection:
         ##### Normalisation des features
         """
     )
-
-
-st.markdown(
-    """
-    ### Entraînement d'un arbre de décision
-    """
-)
-pipe = pipeline.Pipeline(
-    [
-        # ("feature_selection", feature_selection),
-        # ('std_scaler', preprocessing.StandardScaler()),
-        ("decision_tree", tree.DecisionTreeClassifier())
-    ]
-)
-
-pipe.fit(X_train, y_train)
-
-st.write("Affichage de l'arbre de décision")
-fig = plt.figure(figsize=(30, 20))
-tree.plot_tree(
-    pipe[-1],
-    feature_names=X_train.columns,
-    filled=True,
-    rounded=True,
-    class_names=["Vin sucré", "Vin éuilibré", "Vin amer"],
-    fontsize=9,
-)
-st.pyplot(fig)
-
-st.markdown(
-    """
-    #### Evaluation du modèle
-    """
-)
-
-st.write("Accuracy on train set =", pipe.score(X_train, y_train))
-st.write("Accuracy on test set =", pipe.score(X_test, y_test))
-
-# En pourcentage
-st.write("Accuracy on train set =", f"{(pipe.score(X_train, y_train) * 100):.2f} %")
-st.write("Accuracy on test set =", f"{(pipe.score(X_test, y_test) * 100):.2f} %")
-# st.write("This is the first exploration page.")
-
-
-# st.dataframe(df_raw.head(10), use_container_width=True)

@@ -7,27 +7,29 @@ df_raw = (
     pd.read_csv("./data/vin.csv", sep=',').iloc[:, 1:]
    
 )  
-  
+st.image("./Streamlit/images/Ren And Stimpy Cartoon GIF.gif")  
 st.title("Exploration des données - dataset Vin")
 st.sidebar.header("Exploration des données ➡️ ")
-st.markdown("Affichage des données")
-st.dataframe(df_raw, use_container_width=True, height=500)
-st.markdown("Affichage de valeurs manquantes")
-df_valeurs_nulles = df_raw.isnull().sum().reset_index().T
-st.dataframe(df_valeurs_nulles)
-st.markdown("Affichage des types de données")
-df_types = pd.DataFrame(df_raw.dtypes, columns=["Type de données"])  
-st.dataframe(df_types.T)  
-st.markdown("Statistiques descriptives des données numériques**")
-df_describe = df_raw.describe().round(2)  
-df_styled = df_describe.style.background_gradient(cmap="Greens")  
-df_styled = df_styled.format(lambda x: '{:.3g}'.format(x)) 
-df_styled = df_styled.set_table_styles(
-    [{'selector': 'th', 
-      'props': [('font-weight', 'normal'), ('font-size', '12px')]} 
-    ]
-) 
-st.markdown(df_styled.to_html(), unsafe_allow_html=True)  
+with st.expander("Explorer toutes les données", expanded=False):
+    st.dataframe(df_raw, use_container_width=True, height=500)
+with st.expander("Voir un échantillon aléatoire", expanded=False):
+    st.dataframe(df_raw.sample(5), use_container_width=True)
+with st.expander("Voir les valeurs manquantes", expanded=False):
+    df_valeurs_nulles = df_raw.isnull().sum().reset_index().T
+    st.dataframe(df_valeurs_nulles)
+with st.expander("Voir les types de données", expanded=False):
+    df_types = pd.DataFrame(df_raw.dtypes, columns=["Type de données"])  
+    st.dataframe(df_types.T)  
+with st.expander("Afficher les statistiques descriptives des données numériques", expanded=False):
+    df_describe = df_raw.describe().round(2)  
+    df_styled = df_describe.style.background_gradient(cmap="Greens")  
+    df_styled = df_styled.format(lambda x: '{:.3g}'.format(x)) 
+    df_styled = df_styled.set_table_styles(
+        [{'selector': 'th', 
+        'props': [('font-weight', 'normal'), ('font-size', '12px')]} 
+        ]
+    )
+    st.markdown(df_styled.to_html(), unsafe_allow_html=True)
 with st.expander("Histogrammes des distributions des composants", expanded=False):
         num_cols = [col for col in df_raw.select_dtypes(include=['int64', 'float64']).columns if col != "target"]
         if not num_cols:
@@ -47,7 +49,6 @@ with st.expander("Histogrammes des distributions des composants", expanded=False
                     for j in range(i + 1, len(axes)):
                         fig.delaxes(axes[j])
                     st.pyplot(fig)
-
 with st.expander("Distribution des valeurs de la variable cible", expanded=False):
         df_hist = df_raw["target"].value_counts(normalize=True).reset_index()  
         df_hist.columns = ["target", "percentage"]
@@ -69,7 +70,6 @@ with st.expander("Distribution des valeurs de la variable cible", expanded=False
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:  
             st.pyplot(fig)
-
 with st.expander("Analyse des relations entre les variables numériques indépendants et la cible", expanded=False):
     pairplot_cols = num_cols[:10]
     pairplot_cols.append("target")

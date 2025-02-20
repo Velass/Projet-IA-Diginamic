@@ -7,13 +7,8 @@ st.set_page_config(
 )
 
 
-st.title("🍷 Analyse et Prédiction du Vin")
-
-
+st.title("🍷 Analyse et Prédiction de la catégorie du Vin")
 st.image("wine.jpg")
-
-
-
 st.markdown(
     """
     Bienvenue dans cette application de **Machine Learning** dédiée à l'analyse et la classification des vins !  
